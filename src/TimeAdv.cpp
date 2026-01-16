@@ -24,8 +24,8 @@
 
 
 
-
-
+// 显式欧拉方程实现最基础的一阶时间推进
+// F, G, Q 分别代表x, y, z 三个方向上的数值通量 Flux
 void TimeAdv::EE(int NS, double dt, Array<double, 1> &xnode, Array<double, 1> &ynode, Array<double, 1> &znode, int bc, Array<double, 4> &F, Array<double, 4> &G, Array<double, 4> &Q, Array<double, 4> &RHS)
 {
 
@@ -39,7 +39,7 @@ void TimeAdv::EE(int NS, double dt, Array<double, 1> &xnode, Array<double, 1> &y
                 for (int s = 0; s < NS + 4; s++)
                     RHS(i, j, k, s) = -dt / (xnode(i) - xnode(i - 1)) * (F(i, j, k, s) - F(i - 1, j, k, s)) -
                                       dt / (ynode(j) - ynode(j - 1)) * (G(i, j, k, s) - G(i, j - 1, k, s)) -
-                                      dt / (znode(k) - znode(k - 1)) * (Q(i, j, k, s) - G(i, j, k - 1, s));
+                                      dt / (znode(k) - znode(k - 1)) * (Q(i, j, k, s) - Q(i, j, k - 1, s));
 }
 
 
@@ -53,7 +53,7 @@ void TimeAdv::EE(int NS, double dt, Array<double, 1> &xnode, Array<double, 1> &y
 
 
 
-
+// 三阶 TCD 龙塔-库塔法
 void TimeAdv::TVD_RK3(int NS, double dt, Array<double, 1> &xnode, Array<double, 1> &ynode, Array<double, 1> &znode, int bc, Array<double, 4> &F, Array<double, 4> &G, Array<double, 4> &Q, Array<double, 4> &RHS)
 {
     int ni = xnode.GetSize();

@@ -32,7 +32,7 @@ using namespace std;
 
 
 
-
+// 网格处理
 void Mesh::MeshProcess(char *gridname)
 {
 
@@ -71,7 +71,7 @@ void Mesh::MeshProcess(char *gridname)
 
 
 
-
+// 初始化 分配内存
 void Mesh::Initial()
 {
     dx = (xb - xa) / (total_ni - 1);
@@ -104,9 +104,9 @@ void Mesh::Initial()
 
 
 
-
-
-
+// 线性外推
+// 利用边界内侧的点，按中心对称的方式推算出边界外侧的 Ghost Nodes
+// 保证 Ghost Nodes 的坐标与内部点保持相同的步长向外延伸
 void Mesh::Boundary()
 {
     for (int i = 0; i < bc; i++)
@@ -129,7 +129,7 @@ void Mesh::Boundary()
 
 
 
-
+// 将当前进程生成的局部网格坐标导出为标准格式的数据文件以便检查网格划分是否正确
 void Mesh::MeshCheck()
 {
     string filename = "./output_" + to_string(numprocs) + "/grid/grid_check_" + to_string(myid) + ".dat";
