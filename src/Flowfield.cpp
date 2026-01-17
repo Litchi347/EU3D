@@ -29,7 +29,7 @@
 
 
 
-
+// 加载网格
 void Flowfield::InputRead(char *initialization, Array<double, 1> &xnode, Array<double, 1> &ynode, Array<double, 1> &znode, int bc)
 {
     this->xnode = xnode;
@@ -238,7 +238,7 @@ void Flowfield::FieldInitial(Array<double,1> &Ri_temp, Array<double,1> &Mw_temp,
 
 
 
-// 计算并同步整个计算域的自适应时间步长
+// 根据当前声速和流速，动态计算安全的时间步长，防止计算发散
 void Flowfield::CFLcondition(double cfl, double Final_Time)
 {
     dx = xnode(1) - xnode(0);
@@ -279,7 +279,7 @@ void Flowfield::CFLcondition(double cfl, double Final_Time)
 
 
 
-
+// 处理物理边界 -> 固壁反射边界、入流出口边界
 void Flowfield::FieldBoundary_1dZND()
 {
 
@@ -1091,13 +1091,13 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
 
 
 
-
-// 空间离散 Diff 与时间推进 TimeAdv 的选择
+// 空间离散 Diff 与时间推进 TimeAdv 的选择 
+// 物质如何随流动迁移
 void Flowfield::Advection(int _TimeAdv, int _Diff)
 {
     void (*diff)(int, Array<double, 1> &, Array<double, 1> &, Array<double, 1> &, Array<double, 4> &, Array<double, 3> &, int, int);
-
-    // 利用函数指针 duff 选择 MUSCL 格式
+    // 利用函数指针 duff 选择 MUSCL 格式 
+    // 根据网格中心的值预测网格界面上的左右状态(L, R)
     switch(_Diff)
     {
     case 0:                                      // 一阶精度
@@ -1110,7 +1110,7 @@ void Flowfield::Advection(int _TimeAdv, int _Diff)
     F.Fill(0.0);
     G.Fill(0.0);
     Q.Fill(0.0);
-
+    // 调用 AUSM，将通量结果存入 RHS
     AUSM(1, F, diff);                            // 计算 X 方向通量 F
     AUSM(2, G, diff);                            // 计算 Y 方向通量 G
     AUSM(3, Q, diff);                            // 计算 Z 方向通量 Q
@@ -1165,7 +1165,7 @@ void Flowfield::Update_after_Adv()
 // 在 CFD 求解器中，通常我们会存储两套变量
 // 原始变量：如压力 P、温度 T、速度 U, V, W、组分质量分数 Y_i。这些变量直观、便于设置边界条件
 // 保守变量：如密度 rho、动量 rho u、总能 rho E。这是控制方程直接求解的对象，满足守恒律
-// 将原始变量转换并初始化为 CS
+// 转换器：将原始变量（如温度、压力）转换成求解器计算需要的保守变量 CS（密度、动量、总能、组分密度）
 void Flowfield::Explicit()
 {
     for(int i = bc; i < ni + bc; i++)
@@ -1210,7 +1210,7 @@ void Flowfield::Explicit(int step, int i, int j, int k)
 
 
 
-
+// 化学反应核心
 // 利用 隐式处理反应源项-显式处理流动项 方法处理化学反应源项并更新流场物理量
 void Flowfield::Update_IMEX(Array<double, 4> &Wi, Array<double, 5> &MD)
 {
@@ -1222,7 +1222,7 @@ void Flowfield::Update_IMEX(Array<double, 4> &Wi, Array<double, 5> &MD)
             {   // 累加源项
                 for(int s = 0; s < NS; s++)
                     RHS(i, j, k, s) = RHS(i, j, k, s) + Wi(i, j, k, s) * dt;
-                // 隐式修正与变量更新
+                // 隐式修正与变量更新 保证在强化学反应下的稳定性
                 for(int s = 0; s < NS + 4; s++)
                     CS(i, j, k, s) = CS(i, j, k, s) + RHS(i, j, k, s) / (1.0 - dt * MD(i, j, k, s, s));
             }            
@@ -1241,7 +1241,7 @@ void Flowfield::Update_IMEX(Array<double, 4> &Wi, Array<double, 5> &MD)
 
 
 
-// 解码：将更新后的保守变量转换为原始变量(P, U, V, W, E)
+// 解码步骤：将更新后的保守变量转换为原始变量(P, U, V, W, E)
 // 控制方程更新的是保守变量，需要原始变量来导出下一步的通量
 void Flowfield::Update_after_CS()
 {
@@ -1254,13 +1254,13 @@ void Flowfield::Update_after_CS()
                 Array<double, 1> Yi_temp1(NS);
                 Array<double, 1> Cpi1(NS);
                 D(i, j, k) = 0;
-                for(int s = 0; s < NS; s++)
+                for (int s = 0; s < NS; s++)
                 {
-                    D(i, j, k) += CS(i, j, k, s);
+                    D(i, j, k) += CS(i, j, k, s);// 各组组分偏密度相加得到总密度
                     Di(i, j, k, s) = CS(i, j, k, s);
                     Mc(i, j, k, s) = Di(i, j, k, s) / Mw(s) * 1000;
                 }
-                for(int s = 0; s < NS; s++)
+                for (int s = 0; s < NS; s++)
                 {
                     Yi(i, j, k, s) = CS(i, j, k, s) / D(i, j, k);
                     Yi_temp1(s) = Yi(i, j, k, s);
@@ -1274,7 +1274,7 @@ void Flowfield::Update_after_CS()
                 Rgas(i, j, k) = R * 1000 / Wav(i, j, k);
                 P(i, j, k) = T(i, j, k) * D(i, j, k) * Rgas(i, j, k);
                 H(i, j, k) = P(i, j, k) / D(i, j, k) + E(i, j, k);
-                for(int s = 0; s < NS;s++)
+                for (int s = 0; s < NS; s++)
                     Cpi1(s) = React.GetCpi(T(i, j, k), Ri(s), s, Coeff0, Coeff1);
                 Cp(i, j, k) = Fun.sum(2, Cpi1, Yi_temp1) * 1000;
                 Gamma(i, j, k) = Cp(i, j, k) / (Cp(i, j, k) - R * Fun.sum(3, Yi_temp1, Mw) * 1000);
@@ -1290,13 +1290,13 @@ void Flowfield::Update_after_CS(int step, int i, int j, int k)
     Array<double, 1> Yi_temp1(NS);
 
     D(i, j, k) = 0;
-    for(int s = 0; s < NS; s++)
+    for (int s = 0; s < NS; s++)
     {
-        D(i, j ,k) += CS(i, j, k,s);
+        D(i, j ,k) += CS(i, j, k, s);
         Di(i, j, k, s) = CS(i, j, k, s);
         Mc(i, j, k, s) = Di(i, j, k, s) / Mw(s) * 1000;
     }
-    for(int s = 0; s < NS; s++)
+    for (int s = 0; s < NS; s++)
     {
         Yi(i, j, k, s) = CS(i, j, k, s) / D(i, j, k);
         Yi_temp1(s) = Yi(i, j, k, s);
@@ -1310,7 +1310,7 @@ void Flowfield::Update_after_CS(int step, int i, int j, int k)
     Rgas(i, j, k) = R * 1000 / Wav(i, j, k);
     P(i, j, k) = T(i, j, k) * D(i, j, k) * Rgas(i, j, k);
     H(i, j, k) = P(i, j, k) / D(i, j, k) + E(i, j, k);
-    for(int s = 0; s < NS; s++)
+    for (int s = 0; s < NS; s++)
         Cpi(s) = React.GetCpi(T(i, j, k), Ri(s), s, Coeff0, Coeff1);
     Cp(i, j, k) = Fun.sum(2, Cpi, Yi_temp1) * 1000;
     Gamma(i, j, k) = Cp(i, j, k) / (Cp(i, j, k) - R * Fun.sum(3, Yi_temp1, Mw) * 1000);
@@ -1511,27 +1511,27 @@ void Flowfield::AUSM(int direction, Array<double, 4> &Fi, void (*Diff)(int, Arra
 
 
 
-// 具备从内能和组分反算温度的能力
+// 利用已知的内能和组分比例，采用数值迭代反推当前的温度
 double Flowfield::Get_temp(double T, int i, int j, int k)
 {
-    double T0 = T, T_temp = T;
-    double temp1 = 0.0, temp2 = 0.0;
+    double T0 = T, T_temp = T;                   // T0 当前步的温度预测值， T_temp 是下一步的温度预测值
+    double temp1 = 0.0, temp2 = 0.0;             // temp1 误差函数：当前温度猜测值下的内能与目标内能之间的残差，temp2 内能对温度的导数，物理上等同于混合气体的定容比热 cv
     int count = 0;
     Array<double, 1> Cpi0, Hi0;
     Cpi0.Initial(NS);
     Hi0.Initial(NS);
-    while(count < 10)
+    while (count < 10)
     {
         T0 = T_temp;
-        for(int s = 0; s < NS; s++)
+        for (int s = 0; s < NS; s++)
         {
             Cpi0(s) = React.GetCpi(T0, Ri(s), s, Coeff0, Coeff1);
             Hi0(s) = React.GetHi(T0, Ri(s), s, Coeff0, Coeff1);
         }
         temp1 = (Fun.sum(2, Yi_temp0, Hi) - E(i, j, k) * 1e-3) - Fun.sum(2, Yi_temp0, Ri) * T0;
         temp2 = Fun.sum(2, Yi_temp0, Cpi) - Fun.sum(2, Yi_temp0, Ri);
-        T_temp = T0 - temp1 / temp2;
-        if(abs(T_temp - T0) < 1e-6)
+        T_temp = T0 - temp1 / temp2;             // 使用牛顿法公式迭代更新 T 的预测值
+        if (abs(T_temp - T0) < 1e-6)             // T_temp 约等于 T0时，表收敛，迭代结束
             break;
         else
             count = count + 1;
@@ -1545,7 +1545,7 @@ double Flowfield::Get_temp(double T, int i, int j, int k, Array<double, 1> &Yi_t
     double temp1 = 0.0, temp2 = 0.0;
     int count = 0;
     Array<double, 1> Cpi0(NS), Hi0(NS);
-    while(count < 10)
+    while (count < 10)
     {
         T0 = T_temp;
         for(int s = 0; s < NS; s++)
@@ -1570,21 +1570,21 @@ double Flowfield::Get_temp(double T, int i, int j, int k, Array<double, 1> &Yi_t
 
 
 
-
-
-
-
-
+// 用来计算温度对保守变量的偏导数
+// 温度 T 如何随着保守变量的变化而变化
+// Partion_T(i, j, k, s) 对组分密度的偏导
+// Partion_T(i, j, k, NS + 1) 对动量的偏导
+// Partion_T(i, j, k, NS + 2) 对总能量的偏导
 void Flowfield::GetPartial_T()
 {
-    double CV = 0.0, Hi = 0.0;
-
-    for(int i = bc; i < ni + bc; i++)
-        for(int j = bc; j < nj + bc; j++)
-            for(int k = bc; k < nk + bc; k++)
+    double CV = 0.0, Hi = 0.0;                   // CV 定容比热，Hi 组分焓
+    // #pragma omp parallel for num_threads(num_thread) collapse(3) schedule(static)
+    for (int i = bc; i < ni + bc; i++)
+        for (int j = bc; j < nj + bc; j++)
+            for (int k = bc; k < nk + bc; k++)
             {
                 CV = Cp(i, j, k) - Rgas(i, j, k);
-                for(int s = 0; s < NS; s++)
+                for (int s = 0; s < NS; s++)
                 {
                     Hi = React.GetHi(T(i, j, k), Ri(s), s, Coeff0, Coeff1);
                     Partion_T(i, j, k, s) = (0.5 * (pow(U(i, j, k), 2) + pow(V(i, j, k), 2) + pow(W(i, j, k), 2)) - Hi + Ri(s) * 1e3 * T(i, j, k)) / (CV * D(i, j, k));
@@ -1593,7 +1593,7 @@ void Flowfield::GetPartial_T()
                 Partion_T(i, j, k, NS + 2) = 1.0 / (CV * D(i, j, k));
             }
 }
-
+// 将三维的 Ghost Cells 数据打包成一维向量发送，接收后再“解包”还原成三维数组
 void Flowfield::PackagePrev(std::vector<double> &data, int i, int j, int k)
 {
     for (int s = 0; s < NS; s++)
@@ -1608,26 +1608,26 @@ void Flowfield::PackagePrev(std::vector<double> &data, int i, int j, int k)
     data.push_back(V(i, j, k));
     data.push_back(W(i, j, k));
 }
-void Flowfield::UnpackagePrev(std::vector<double> &data, int meshnum)
-{
-    int index = 0;
-    for (int i = 0; i < meshnum; i++)
-        for (int s = 0; s < NS; s++)
-        {
-            Mc(i, 0, 0, s) = data[index++];
-            for (int s = 0; s < NS; s++)
-                Di(i, 0, 0, s) = data[index++];
-            for (int s = 0; s < NS; s++)
-                Yi(i, 0, 0, s) = data[index++];
-            T(i, 0, 0) = data[index++];
+// void Flowfield::UnpackagePrev(std::vector<double> &data, int meshnum)
+// {
+//     int index = 0;
+//     for (int i = 0; i < meshnum; i++)
+//         for (int s = 0; s < NS; s++)
+//         {
+//             Mc(i, 0, 0, s) = data[index++];
+//             for (int s = 0; s < NS; s++)
+//                 Di(i, 0, 0, s) = data[index++];
+//             for (int s = 0; s < NS; s++)
+//                 Yi(i, 0, 0, s) = data[index++];
+//             T(i, 0, 0) = data[index++];
+//             // cout << "recv T " << i << " " << T(i, 0, 0) << endl;
+//             E(i, 0, 0) = data[index++];
+//             U(i, 0, 0) = data[index++];
+//             V(i, 0, 0) = data[index++];
+//             W(i, 0, 0) = data[index++];
+//         }
 
-            E(i, 0, 0) = data[index++];
-            U(i, 0, 0) = data[index++];
-            V(i, 0, 0) = data[index++];
-            W(i, 0, 0) = data[index++];
-        }
-
-}
+// }
 void Flowfield::UnpackagePrev(std::vector<double> &data, std::vector<int> &recvFrom, std::vector<int> &transferNmesh)
 {
     int index = 0, start = 0, size = 0;
@@ -1653,13 +1653,13 @@ void Flowfield::UnpackagePrev(std::vector<double> &data, std::vector<int> &recvF
 }
 void Flowfield::UnpackagePrev(std::vector<double> &data, int meshnum, std::vector<int> &recvFrom, std::vector<int> &transferNmesh)
 {
-
+    // cout << "unpackage start\n";
     int index = 0, start = 0, size = 0;
     for (int n = 0; n < recvFrom.size(); n++)
     {
         start = std::accumulate(transferNmesh.begin(), transferNmesh.begin() + recvFrom[n], 0) * (5 + 3 * NS);
         size = transferNmesh[recvFrom[n]];
-
+        cout << "myid: " << myid << " start: " << start << " size: " << size;
         for (int i = 0; i < size; index++, i++)
         {
             for (int s = 0; s < NS; s++)
@@ -1675,8 +1675,8 @@ void Flowfield::UnpackagePrev(std::vector<double> &data, int meshnum, std::vecto
             W(index, 0, 0) = data[start++];
         }
     }
-
-
+    // cout << " index: " << index << " start: " << start << " data size: " << data.size() << endl;
+    // cout << "unpackage done\n";
 }
 void Flowfield::UnpackagePrev(std::vector<double> &data, Array<int, 1> &mesh, Array<int, 1> &NchemIndex)
 {
@@ -1710,7 +1710,7 @@ void Flowfield::UnpackagePrev(std::vector<double> &data, Array<int, 1> &mesh, Ar
             }
         }
 
-
+    // cout << "unpackage done\n";
 }
 
 void Flowfield::PackageUpdate(std::vector<double> &data, int meshnum)
@@ -1786,7 +1786,7 @@ void Flowfield::PackageUpdate(std::vector<double> &data, int meshnum, std::vecto
     {
         start = std::accumulate(transferNmesh.begin(), transferNmesh.begin() + recvFrom[n], 0) * (18 + 4 * NS);
         size = transferNmesh[recvFrom[n]];
-
+        // cout << "myid: " << myid << " start: " << start << " size: " << size;
         for(int i = 0; i < size; index++, i++)
         {
             data[start++] = D(index, 0, 0);
@@ -1883,7 +1883,7 @@ void Flowfield::UnpackageUpdate(std::vector<double> &data, std::vector<int> &tra
             Gamma(x, y, z) = data[start++];
             C(x, y, z) = data[start++];
             Ma(x, y, z) = data[start++];
-
+            // cout << x << " " << y << " " << z << " " << D(x, y, z) << " " << T(x, y, x) << endl; 
 
             for(int s = 0; s < NS + 4; s++)
                 CS(x, y, z, s) = data[start++];

@@ -48,7 +48,7 @@ private:
 
     double ft1 = 0, ft2 = 0, ft3 = 0, ft4 = 0, ft5 = 0, ft6 = 0;
 
-    int NS;
+    int NS;                                      // 
     int NR;
     Reaction React;
     const double R = 8.31434;
@@ -86,8 +86,8 @@ private:
     Array<double,3> E;                           // 单位质量内能
     Array<double,3> Gamma;                       // 比热比 cp/cv
     Array<double,4> Mr;
-    Array<double,4> Mc;
-    Array<double,4> Mi;
+    Array<double,4> Mc;                          // 组分摩尔浓度
+    Array<double,4> Mi;                          // 组分摩尔分数
     Array<double,4> Yi;                          // 组分质量分数
     Array<double,4> Di;                          // 各单一分组的偏密度
     Array<double,1> Cpi;                         // 各单一组分的比热
