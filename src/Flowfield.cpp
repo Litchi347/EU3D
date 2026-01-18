@@ -137,10 +137,10 @@ void Flowfield::Construction()
 
     send_data_1.Initial(9 * flo * col * bc + NS * flo * col * bc);
     recv_data_1.Initial(9 * flo * col * bc + NS * flo * col * bc);
-    send_data_2.Initial(9 * flo * col * bc + NS * flo * col * bc);
-    recv_data_2.Initial(9 * flo * col * bc + NS * flo * col * bc);
-    send_data_3.Initial(9 * flo * col * bc + NS * flo * col * bc);
-    recv_data_3.Initial(9 * flo * col * bc + NS * flo * col * bc);
+    send_data_2.Initial(9 * flo * row * bc + NS * flo * row * bc);
+    recv_data_2.Initial(9 * flo * row * bc + NS * flo * row * bc);
+    send_data_3.Initial(9 * col * row * bc + NS * col * row * bc);
+    recv_data_3.Initial(9 * col * row * bc + NS * col * row * bc);
     return;
 }
 
@@ -856,8 +856,8 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
 
         MPI_Request request2[2];
         MPI_Status status2[2];
-        MPI_Isend(&send_data_1(0), send_data_1.GetSize(), MPI_DOUBLE, m_right, tag2, MPI_COMM_WORLD, &request2[0]);
-        MPI_Irecv(&recv_data_1(0), recv_data_1.GetSize(), MPI_DOUBLE, m_left, tag2, MPI_COMM_WORLD, &request2[1]);
+        MPI_Isend(&send_data_1(0), send_data_1.GetSize(), MPI_DOUBLE, m_left, tag2, MPI_COMM_WORLD, &request2[0]);
+        MPI_Irecv(&recv_data_1(0), recv_data_1.GetSize(), MPI_DOUBLE, m_right, tag2, MPI_COMM_WORLD, &request2[1]);
         MPI_Waitall(2, request2, status2);
         // 从右邻居的左边界数据块获得数据解包到右 Ghost Cells
         idx = 0;
@@ -886,8 +886,8 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
 
         
         idx = 0;
-        for(int i = 0; i < bc; i++)
-                for(int j = 0; j < col; j++)
+        for(int i = 0; i < row; i++)
+                for(int j = 0; j < bc; j++)
                     for(int k = 0; k < flo; k++)
                     {
                         send_data_2(idx) = D(i, nj - j, k);
@@ -900,7 +900,7 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
                         send_data_2(idx + 7 * ysize) = Gamma(i, nj - j, k);
                         send_data_2(idx + 8 * ysize) = C(i, nj - j, k);
                         for(int s = 0; s < NS; s++)
-                            send_data_2(9 * ysize + idx * NS + s) = Yi(i, nj - j, k,s);
+                            send_data_2(9 * ysize + idx * NS + s) = Yi(i, nj - j, k, s);
                         idx++;
                     }
 
@@ -983,9 +983,9 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
 
 
         idx = 0;
-        for(int i = 0; i < row; i++)
-            for(int j = 0; j < col; j++)
-                for(int k = 0; k < bc; k++)
+        for (int i = 0; i < row; i++)
+            for (int j = 0; j < col; j++)
+                for (int k = 0; k < bc; k++)
                 {
                     send_data_3(idx) = D(i, j, nk - k);
                     send_data_3(idx + zsize) = U(i, j, nk - k);
@@ -1004,7 +1004,7 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
         MPI_Request request5[2];
         MPI_Status status5[2];
         MPI_Isend(&send_data_3(0), send_data_3.GetSize(), MPI_DOUBLE, m_up, tag5, MPI_COMM_WORLD, &request5[0]);
-        MPI_Irecv(&send_data_3(0), send_data_3.GetSize(), MPI_DOUBLE, m_down, tag5, MPI_COMM_WORLD, &request5[1]);
+        MPI_Irecv(&recv_data_3(0), recv_data_3.GetSize(), MPI_DOUBLE, m_down, tag5, MPI_COMM_WORLD, &request5[1]);
         MPI_Waitall(2, request5, status5);
 
         idx = 0;
@@ -1051,7 +1051,7 @@ void Flowfield::Mpi_Boundary()                   // 实现相邻进程之间的�
         MPI_Request request6[2];
         MPI_Status statu6[2];
         MPI_Isend(&send_data_3(0), send_data_3.GetSize(), MPI_DOUBLE, m_down, tag6, MPI_COMM_WORLD, &request6[0]);
-        MPI_Irecv(&send_data_3(0), send_data_3.GetSize(), MPI_DOUBLE, m_up, tag6, MPI_COMM_WORLD, &request6[1]);
+        MPI_Irecv(&recv_data_3(0), recv_data_3.GetSize(), MPI_DOUBLE, m_up, tag6, MPI_COMM_WORLD, &request6[1]);
         MPI_Waitall(2, request6, statu6);
 
         idx = 0;

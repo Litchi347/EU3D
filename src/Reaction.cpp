@@ -898,8 +898,8 @@ double Reaction::GetCpi(double T, double R, int SP, Array<double, 2> &Coeff0, Ar
         Cpi = R * (Coeff0(0, SP) * pow(T, -2) + Coeff0(1, SP) * pow(T, -1) + Coeff0(2, SP) + Coeff0(3, SP) * T + Coeff0(4, SP) * pow(T, 2) + Coeff0(5, SP) * pow(T, 3) + Coeff0(6, SP) * pow(T, 4));
     else                                                                  // 高温度段使用 Coeff1 数组中的系数
         Cpi = R * (Coeff1(0, SP) * pow(T, -2) + Coeff1(1, SP) * pow(T, -1) + Coeff1(2, SP) + Coeff1(3, SP) * T + Coeff1(4, SP) * pow(T, 2) + Coeff1(5, SP) * pow(T, 3) + Coeff1(6, SP) * pow(T, 4));
-    if (SP == 0)
-        // cout << T << " " << R << " " << Coeff0(0, 0) << " " << Coeff0(1, 0) << " " << Coeff0(2, 0) << " " << Coeff0(3, 0) << endl;
+    // if (SP == 0)
+    //     cout << T << " " << R << " " << Coeff0(0, 0) << " " << Coeff0(1, 0) << " " << Coeff0(2, 0) << " " << Coeff0(3, 0) << endl;
     return Cpi;
 }
 

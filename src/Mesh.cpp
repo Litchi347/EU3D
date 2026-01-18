@@ -80,11 +80,11 @@ void Mesh::Initial()
     for (int i = bc; i < ni + bc; i++)
         xnode(i) = xa + (myid_x * (ni - 1) + i - bc) * dx;
 
-    dy = (yb - ya) / (total_nk - 1);
+    dy = (yb - ya) / (total_nj - 1);
     nj = (total_nj - 1) / m_block_y + 1;
     ynode.Initial(nj + 2 * bc);
     for (int j = bc; j < nj + bc; j++)
-        ynode(j) = ya + (myid_y * (nk - 1) + j - bc) * dy;
+        ynode(j) = ya + (myid_y * (nj - 1) + j - bc) * dy;
 
     dz = (zb - za) / (total_nk - 1);
     nk = (total_nk - 1) / m_block_z + 1;

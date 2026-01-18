@@ -1,0 +1,10 @@
+myid:	6
+FileReader:	0.00108636
+Mpi_Initial:	4.21154e-07
+MeshProcess:	3.88883e-05
+InputRead:	0.00111034
+ReactionRead:	0.0118703
+FieldInitial:	0.0317817
+MPI_Barrier:	0.00530464
+Computing:	0.328405
+Output:	0.0165404

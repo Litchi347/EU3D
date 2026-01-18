@@ -153,7 +153,7 @@ void Euler::FileRead()
     }
 
 
-    strcpy(timeadv, Ctrl.getStringParameter("time_adv").c_str());
+    strcpy(timeadv, Ctrl.getStringParameter("time-adv").c_str());
     switch(hash_(timeadv))
     {
     case "EE"_hash:
@@ -211,8 +211,8 @@ void Euler::FileRead()
 void Euler::Mpi_Initial()
 {
     myid_x = int(myid % m_block_x);
-    myid_y = int(floor(myid / (m_block_x * myid_y)));
-    myid_z = int(floor(myid % (m_block_x * myid_y) / m_block_x));
+    myid_y = int(floor(myid % (m_block_x * m_block_y) / m_block_x));
+    myid_z = int(floor(myid / (m_block_x * m_block_y)));
     if(myid_x > 0)                                                   // 在 x 方向设置进程的左邻居进程
         m_left = myid - 1;
     else
