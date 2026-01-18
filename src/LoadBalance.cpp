@@ -61,7 +61,7 @@ void DynamicLoadBalancer::DLBPriorityQueue(Array<int, 1> &arr)                  
 int DynamicLoadBalancer::GetSentNchem(int element)                                                 // element 通常是 MPI Rank
 {
     sendTo.clear();
-    int totalSentAmount = 0;
+    int totalSentAmount = 0;                                                                       // 迁移任务数量
     int line = 0;
     for (const auto &transfer : transferNchem)                                                     // 记录发送给每个接收者的网格点总数
     {

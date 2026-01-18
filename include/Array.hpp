@@ -327,7 +327,7 @@ namespace ARRAY                                                                /
             return sum;
         }
 
-        inline const T SumNoBoundary(int bc) const                             // 去除边缘层后内部元素总和
+        inline const T SumNoBoundary(int bc) const                             // 去除边缘层后内部数据部分化学计算步数总和
         {
             T sum = 0;
             for(size_t i = 0; i < Len; i++)

@@ -12,7 +12,7 @@ class DynamicLoadBalancer
 public:
 
     std::vector<std::tuple<int,int,int>> transferNchem;    // 记录谁给谁发送了多少载荷
-    double LoadDegree = 0.0;                               // 负载度
+    double LoadDegree = 0.0;                               // 负载不均衡度 =  (最大负载 - 平均负载) / 最大负载
     double LoadDegreeBalance = 0.0;                        // 平衡后的负载度
     int NchemSumBalance = 0;                               // 平衡后的全场化学反应总数
     std::vector<int> NchemTotalBalance;                    // 平衡后每一个进程的分得的总载荷量

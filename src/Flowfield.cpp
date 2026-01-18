@@ -238,7 +238,7 @@ void Flowfield::FieldInitial(Array<double,1> &Ri_temp, Array<double,1> &Mw_temp,
 
 
 
-// 根据当前声速和流速，动态计算安全的时间步长，防止计算发散
+// 根据当前声速和流速，动态计算安全的时间步长，防止计算发散（cfl 不等于 0 时）
 void Flowfield::CFLcondition(double cfl, double Final_Time)
 {
     dx = xnode(1) - xnode(0);
@@ -1115,7 +1115,7 @@ void Flowfield::Advection(int _TimeAdv, int _Diff)
     AUSM(2, G, diff);                            // 计算 Y 方向通量 G
     AUSM(3, Q, diff);                            // 计算 Z 方向通量 Q
 
-    // 时间积分
+    // 时间推进
     switch (_TimeAdv)
     {
     case 0:                                      // 显示欧拉法
@@ -1136,11 +1136,11 @@ void Flowfield::Advection(int _TimeAdv, int _Diff)
 
 
 
-// 执行 CS 的最终更新 显式时间推进步
+// 执行保守变量的最终更新 显式时间推进步
 void Flowfield::Update_after_Adv()
 {
     // #pragma omp simd
-    for(int i = bc; i < ni + bc; i++)            // 只更新数据块， Ghost Cells 的值必须由 Mpi_Boundary 从邻居进程传过来
+    for(int i = bc; i < ni + bc; i++)            // 只更新数据块，Ghost Cells 的值必须由 Mpi_Boundary 从邻居进程传过来
         for(int j = bc; j < nj + bc; j++)
             for(int k = bc; k < nk + bc; k++)
                 for(int s = 0; s < NS; s++)      // 保守变量向量的长度
