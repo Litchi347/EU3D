@@ -17,10 +17,10 @@
 
 
 
-# include"Array.hpp"
-# include"TimeAdv.hpp"
-# include"Reaction.hpp"
-# include"Function.hpp"
+#include "Array.hpp"
+#include "TimeAdv.hpp"
+#include "Reaction.hpp"
+#include "Function.hpp"
 
 using namespace std;
 using namespace ARRAY;
@@ -30,15 +30,15 @@ class Flowfield
 private:
 
     int ni;
-    Array<double,1> xnode;
+    Array<double, 1> xnode;
     double dx;
 
     int nj;
-    Array<double,1> ynode;
+    Array<double, 1> ynode;
     double dy;
 
     int nk;
-    Array<double,1> znode;
+    Array<double, 1> znode;
     double dz;
 
     int bc;
@@ -48,7 +48,7 @@ private:
 
     double ft1 = 0, ft2 = 0, ft3 = 0, ft4 = 0, ft5 = 0, ft6 = 0;
 
-    int NS;                                      // 
+    int NS;
     int NR;
     Reaction React;
     const double R = 8.31434;
@@ -69,57 +69,57 @@ private:
 
     double cita;                                 // 坐标旋转角度或激波角度
     double V3;
-    Array<double,3> U;                           // x 方向上速度
-    Array<double,3> V;                           // y 方向上速度
-    Array<double,3> W;                           // z 方向上速度
-    Array<double,3> P;                           // 静压
+    Array<double, 3> U;                          // x 方向上速度
+    Array<double, 3> V;                          // y 方向上速度
+    Array<double, 3> W;                          // z 方向上速度
+    Array<double, 3> P;                          // 静压
     double P_bound;
-    Array<double,3> D;                           // 密度
-    Array<double,3> T;                           // 温度
+    Array<double, 3> D;                          // 密度
+    Array<double, 3> T;                          // 温度
     double T_bound;
-    Array<double,3> C;                           // 当地声速
-    Array<double,3> Ma;                          // 马赫数
-    Array<double,3> Wav;
-    Array<double,3> Rgas;                        // 混合气体常数
-    Array<double,3> Cp;                          // 定压比热
-    Array<double,3> H;                           // 单位质量总焓
-    Array<double,3> E;                           // 单位质量内能
-    Array<double,3> Gamma;                       // 比热比 cp/cv
-    Array<double,4> Mr;
-    Array<double,4> Mc;                          // 组分摩尔浓度
-    Array<double,4> Mi;                          // 组分摩尔分数
-    Array<double,4> Yi;                          // 组分质量分数
-    Array<double,4> Di;                          // 各单一分组的偏密度
-    Array<double,1> Cpi;                         // 各单一组分的比热
-    Array<double,1> Hi;                          // 各单一组分的焓
-    Array<double,1> Ei;                          // 各单一组分的内能
+    Array<double, 3> C;                          // 当地声速
+    Array<double, 3> Ma;                         // 马赫数
+    Array<double, 3> Wav;
+    Array<double, 3> Rgas;                       // 混合气体常数
+    Array<double, 3> Cp;                         // 定压比热
+    Array<double, 3> H;                          // 单位质量总焓
+    Array<double, 3> E;                          // 单位质量内能
+    Array<double, 3> Gamma;                      // 比热比 cp/cv
+    Array<double, 4> Mr;
+    Array<double, 4> Mc;                         // 组分摩尔浓度
+    Array<double, 4> Mi;                         // 组分摩尔分数
+    Array<double, 4> Yi;                         // 组分质量分数
+    Array<double, 4> Di;                         // 各单一分组的偏密度
+    Array<double, 1> Cpi;                        // 各单一组分的比热
+    Array<double, 1> Hi;                         // 各单一组分的焓
+    Array<double, 1> Ei;                         // 各单一组分的内能
 
-    Array<double,4> F;
-    Array<double,4> G;
-    Array<double,4> Q;
-    Array<double,4> CS;                          // 化学反应源项，代表单位时间内化学反应产生的物质变化率
+    Array<double, 4> F;
+    Array<double, 4> G;
+    Array<double, 4> Q;
+    Array<double, 4> CS;                         // 化学反应源项，代表单位时间内化学反应产生的物质变化率
 
     Function Fun;
 
     // 入口边界条件，二维：给定一个方向 X 设置边界条件，是一个 Y-Z 平面
-    Array<double,2> Uint, Vint, Wint, Pint, Dint, Tint, Hint, Eint, Gint;
-    Array<double,3> Yint;
+    Array<double, 2> Uint, Vint, Wint, Pint, Dint, Tint, Hint, Eint, Gint;
+    Array<double, 3> Yint;
 
 
-    Array<double,1> Yi_temp0, YL, YR;
-    Array<double,4> PLR, DLR, ULR, VLR, WLR, HLR, GLR, YLR, YL_temp, YR_temp;
-    Array<double,3> Yi_temp;
-    Array<double,4> Partion_T;
-    Array<double,4> RHS;                         // 右端项，存储空间离散后的残差，用于时间迭代
+    Array<double, 1> Yi_temp0, YL, YR;
+    Array<double, 4> PLR, DLR, ULR, VLR, WLR, HLR, GLR, YLR, YL_temp, YR_temp;
+    Array<double, 3> Yi_temp;
+    Array<double, 4> Partion_T;
+    Array<double, 4> RHS;                        // 右端项，存储空间离散后的残差，用于时间迭代
 
 
-    Array<double,1> m_U_s, m_V_s, m_P_s, m_D_s, m_C_s, m_Gamma_s, m_H_s, m_T_s,m_Yi_s;
-    Array<double,1> m_U_r, m_V_r, m_P_r, m_D_r, m_C_r, m_Gamma_r, m_H_r, m_T_r,m_Yi_r;
-    Array<double,1> send_data_1, recv_data_1, send_data_2, recv_data_2, send_data_3,recv_data_3;
+    Array<double, 1> m_U_s, m_V_s, m_P_s, m_D_s, m_C_s, m_Gamma_s, m_H_s, m_T_s,m_Yi_s;
+    Array<double, 1> m_U_r, m_V_r, m_P_r, m_D_r, m_C_r, m_Gamma_r, m_H_r, m_T_r,m_Yi_r;
+    Array<double, 1> send_data_1, recv_data_1, send_data_2, recv_data_2, send_data_3,recv_data_3;
 
     struct SendRecv_Data                         // 在 MPI 发送和接收时打包数据
     {
-        Array<double,1> D, U, V, P, T, H, Gamma, C, Yi;
+        Array<double, 1> D, U, V, P, T, H, Gamma, C, Yi;
         void Initial(int size, int _NS)
         {
             D.Initial(size);

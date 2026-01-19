@@ -84,9 +84,9 @@ bool FileReader::readFile(const std::string &name)
 }
 
 // 遍历打印出当前 FileReader 类中存储的所有键值对，常用于调试
-void FileReader::printParameter() const
+void FileReader::printParameters() const
 {
-    for(auto it = parameters.begin(); it != parameters.end(); it++)                           // auto 让编译器自动推断类型
+    for (auto it = parameters.begin(); it != parameters.end(); it++)                           // auto 让编译器自动推断类型
     {
         std::cout << it->first << '\t' << it->second << std::endl;
     }

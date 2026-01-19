@@ -63,7 +63,7 @@ public:                                                                         
     bool readFile(const std::string &name);
 
 
-    void printParameter() const;
+    void printParameters() const;
     bool findparameters(std::string param);
     std::string findstring(std::string param) const;
 
@@ -76,15 +76,15 @@ inline int FileReader::getIntParameter(const std::string &key) const
     auto it = parameters.find(key);                                                      // 在 parameters 的 map 中搜索键为 key 的项 it->first 获取键， it->second 获取值 
     try
     {
-        std::stoi(it -> second);                                                         // 将其对应的值转换成 int 类型
-        std::cout << it -> first << '\t' << it -> second << std::endl;
+        std::stoi(it->second);                                                         // 将其对应的值转换成 int 类型
+        std::cout << it->first << '\t' << it->second << std::endl;
     }
     catch(...)
     {
         return 0;
     }
 
-    return std::stoi(it -> second);
+    return std::stoi(it->second);
 }
 
 inline double FileReader::getdoubleParameter(const std::string &key) const
@@ -93,21 +93,21 @@ inline double FileReader::getdoubleParameter(const std::string &key) const
     try
     {
         std::stoi(it -> second);
-        std::cout << it -> first << '\t' << it -> second << std::endl;
+        std::cout << it->first << '\t' << it->second << std::endl;
     }
     catch(...)
     {
         return 0;
     }
 
-    return std::stod(it -> second);
+    return std::stod(it->second);
 }
 
 inline std::string FileReader::getStringParameter(const std::string &key) const
 {
     auto it = parameters.find(key);
-    std::cout << it -> first << '\t' << it -> second << std::endl;
-    return it -> second;
+    std::cout << it->first << '\t' << it->second << std::endl;
+    return it->second;
 }
 
 #endif

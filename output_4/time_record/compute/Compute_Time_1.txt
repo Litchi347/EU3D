@@ -1,9 +1,0 @@
-myid:	1
-FieldBoundary:	0.000290982
-Mpi_Boundary:	0.00126141
-Advection:	0.00411947
-Reaction:	0.0159237
-Output:	0.00118466
-Diagnalized:	0.0141494
-Update_IMEX:	0.00177255
-FileBoundary:5.76947e-07 1.25861e-05 7.85809e-05 1.56495e-07 9.42284e-05 9.42284e-05 0.000103916

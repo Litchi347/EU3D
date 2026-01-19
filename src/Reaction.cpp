@@ -231,10 +231,10 @@ void Reaction::ReactionRead(char *reaction_model, char *thermofile, Array<double
         Af(j) = b[1];
         Bf(j) = b[2];
         Eaf(j) = b[3];
-
-
+        // cout << Af(j) << '\t' << Bf(j) << '\t' << Eaf(j) << endl;
+        // cout << endl;
     }
-
+    // cout << endl;
 
 
     line = line + NR + 3;
@@ -255,11 +255,11 @@ void Reaction::ReactionRead(char *reaction_model, char *thermofile, Array<double
         for (int k = 0; k < NS; k++)
         {
             React_TB(k, a[0] - 1) = a[k + 1];
-
+            // cout << React_TB(k, a[0] - 1) << '\t';
         }
-
+        // cout << endl;
     }
-
+    // cout << endl;
 
 
     line = line + TB + 2;
@@ -345,8 +345,8 @@ void Reaction::ReactionInitial()
 
 
 
-    double Bubble_CenetrX = 0.038;                                        // 气泡位置
-    double Bubble_CenetrY = 0.0;
+    double Bubble_CenterX = 0.038;                                        // 气泡位置
+    double Bubble_CenterY = 0.0;
     double Bubble_Ir = 0.022;                                             // 气泡内部，填充了另一种物质
     double Bubble_Or = 1.2 * Bubble_Ir;                                   // 外部是空气
     double alpha = 5;                                                     // 控制界面模糊程度的系数（值越大，界面越陡峭）
@@ -358,11 +358,11 @@ void Reaction::ReactionInitial()
             {
                 double Mr_SUM = 0.0;
                 double Total_Mw = 0.0;
-                if (pow(xnode(i) - Bubble_CenetrX, 2) + pow(ynode(j) - Bubble_CenetrY, 2) > pow(Bubble_Or, 2))
+                if (pow(xnode(i) - Bubble_CenterX, 2) + pow(ynode(j) - Bubble_CenterY, 2) > pow(Bubble_Or, 2))
                 {
                     Mr(i, j, k, 4) = 1.0;                                 // 索引4（氧气） 占一份
                     Mr(i, j, k, 8) = 3.76;                                // 索引8 （氮气）占一份，空气比例
-                    for(int s = 0; s < NS; s++)
+                    for (int s = 0; s < NS; s++)
                     {
                         Mr_SUM += Mr(i, j, k, s);                         // 总摩尔数
                         Total_Mw += Mr(i, j, k, s) * Mw(s);               // 总质量
@@ -373,7 +373,7 @@ void Reaction::ReactionInitial()
                         Yi(i, j, k, s) = Mr(i, j, k, s) * Mw(s) / Total_Mw;
                     }
                 }
-                else if (pow(xnode(i) - Bubble_CenetrX, 2) + pow(ynode(j) - Bubble_CenetrY, 2) < pow(Bubble_Ir, 2))
+                else if (pow(xnode(i) - Bubble_CenterX, 2) + pow(ynode(j) - Bubble_CenterY, 2) < pow(Bubble_Ir, 2))
                 {
                     Mr(i, j, k, 5) = 1.0;                                 // 内部被某燃料气体占据
                     for (int s = 0; s < NS; s++)
@@ -389,7 +389,7 @@ void Reaction::ReactionInitial()
                 }
                 else                                                      // 界面过渡区：利用高斯函数创建了一个平滑的过渡
                 {
-                    double r = sqrt(pow(xnode(i) - Bubble_CenetrX, 2) + pow(ynode(j) - Bubble_CenetrY, 2));
+                    double r = sqrt(pow(xnode(i) - Bubble_CenterX, 2) + pow(ynode(j) - Bubble_CenterY, 2));
                     Yi(i, j, k, 5) = exp(-alpha * pow((r - Bubble_Ir) / (Bubble_Or - Bubble_Ir), 2));
                     Yi(i, j, k, 4) = (1 - Yi(i, j, k, 5)) * Mw(4) / (Mw(4) + 3.76 * Mw(8));
                     Yi(i, j, k, 8) = (1 - Yi(i, j, k, 5)) * 3.76 * Mw(8) / (Mw(4) + 3.76 * Mw(8));
@@ -411,7 +411,7 @@ void Reaction::ReactionInitial()
 // 采用半隐式梯形法求解化学动力学常微分方程，计算一个时间步内各物种浓度的变化
 Array<double, 4> Reaction::Trapezoid(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, Array<double, 3> &T, double dt)
 {
-
+    // #pragma omp parallel for collapse(2) num_threads(num_thread) default(shared), private(ni, nj, NS, bc)
     // 遍历每一个网格点
     for (int i = bc; i < ni + bc; i++)
         for(int j = bc; j < nj + bc; j++)
@@ -509,7 +509,7 @@ void Reaction::Trapezoid(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, A
     // 只存储当前这一个点涉及到的所有反应中间值
     std::fill(ip.RR_F, ip.RR_F + NR, 1.0);                                // 指针的操作，与 Fill 作用相同
     std::fill(ip.RR_B, ip.RR_B + NR, 1.0);
-    std::fill(ip.R_TB, ip.R_TB + NR, 1.0);
+    std::fill(ip.R_TB, ip.R_TB + NR, 0.0);
     for (int r = 0; r < NR; r++)
     {
         double Xr = 0.0, delta_g = 0.0;
@@ -517,7 +517,7 @@ void Reaction::Trapezoid(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, A
         for (int s = 0; s < NS; s++)
         {
             Xr += (Stoi_B(s, r) - Stoi_F(s, r));
-            delta_g += (Stoi_B(s, r) - Stoi_F(s, r));
+            delta_g += (Stoi_B(s, r) - Stoi_F(s, r)) * ip.Gi[s];
             ip.RR_F[r] *= pow(Mc(i, j, k, s), Stoi_F(s, r));
             ip.RR_B[r] *= pow(Mc(i, j, k, s), Stoi_B(s, r));
             ip.R_TB[r] += Mc(i, j, k, s) * React_TB(s, r);
@@ -590,9 +590,9 @@ void Reaction::Trapezoid(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, A
     // return Di;
 }
 // 预估化学反应的时间尺度，并据此计算每个网格点所需的亚步迭代次数
-void Reaction::TrapezoidPrection(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, Array<double, 4> &Yi_temp, Array<double, 3> &T, double dtm)
+void Reaction::TrapezoidPrediction(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, Array<double, 4> &Yi_temp, Array<double, 3> &T, double dtm)
 {
-
+    #pragma omp parallel for num_threads(num_thread) collapse(3)
     for (int i = bc; i < ni + bc; i++)
         for (int j = bc; j < nj + bc; j++)
             for (int k = bc; k < nk + bc; k++)
@@ -613,7 +613,7 @@ void Reaction::TrapezoidPrection(Array<double, 4> &Mc_temp, Array<double, 4> &Di
                 // 计算瞬时反应速率
                 std::fill(ip.RR_F, ip.RR_F + NR, 1.0);
                 std::fill(ip.RR_B, ip.RR_B + NR, 1.0);
-                std::fill(ip.R_TB, ip.R_TB + NR, 1.0);
+                std::fill(ip.R_TB, ip.R_TB + NR, 0.0);
                 for (int r = 0; r < NR; r++)
                 {
                     double Xr = 0.0, delta_g = 0.0;
@@ -621,7 +621,7 @@ void Reaction::TrapezoidPrection(Array<double, 4> &Mc_temp, Array<double, 4> &Di
                     for (int s = 0; s < NS; s++)
                     {
                         Xr += (Stoi_B(s, r) - Stoi_F(s, r));
-                        delta_g += (Stoi_B(s, r) - Stoi_F(s, r));
+                        delta_g += (Stoi_B(s, r) - Stoi_F(s, r)) * ip.Gi[s];
                         ip.RR_F[r] *= pow(Mc(i, j, k, s), Stoi_F(s, r));
                         ip.RR_B[r] *= pow(Mc(i, j, k, s), Stoi_B(s, r));
                         ip.R_TB[r] += Mc(i, j, k, s) * React_TB(s, r);
@@ -735,7 +735,7 @@ void Reaction::GetNchemMax()
 // 为隐式数值求解器提供化学源项的对角雅可比矩阵，MD 矩阵会被用在解线性方程组 Ax=b 的过程中
 void Reaction::Diagonalized(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp, Array<double, 3> &T, Array<double, 4> &Partial_T)
 {
-
+    // #pragma omp parallel for num_threads(num_thread) collapse(3) schedule(static)
     for (int i = bc; i < ni + bc; i++)
         for (int j = bc; j < nj + bc; j++)
             for (int k = bc; k < nk + bc; k++)
@@ -754,7 +754,7 @@ void Reaction::Diagonalized(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp
 
                 std::fill(ip.RR_F, ip.RR_F + NR, 1.0);
                 std::fill(ip.RR_B, ip.RR_B + NR, 1.0);
-                std::fill(ip.R_TB, ip.R_TB + NR, 1.0);
+                std::fill(ip.R_TB, ip.R_TB + NR, 0.0);
                 for (int r = 0; r < NR; r++)
                 {
                     double Xr = 0.0, delta_g = 0.0;
@@ -762,7 +762,7 @@ void Reaction::Diagonalized(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp
                     for (int s = 0; s < NS; s++)
                     {
                         Xr += (Stoi_B(s, r) - Stoi_F(s, r));
-                        delta_g += (Stoi_B(s, r) - Stoi_F(s, r));
+                        delta_g += (Stoi_B(s, r) - Stoi_F(s, r)) * ip.Gi[s];
                         ip.RR_F[r] *= pow(Mc(i, j, k, s), Stoi_F(s, r));
                         ip.RR_B[r] *= pow(Mc(i, j, k, s), Stoi_B(s, r));
                         ip.R_TB[r] += Mc(i, j, k, s) * React_TB(s, r);
@@ -770,7 +770,7 @@ void Reaction::Diagonalized(Array<double, 4> &Mc_temp, Array<double, 4> &Di_temp
                     ip.Kp[r] = exp(-delta_g / (R * T_local)) * pow((P0 * 1e-6), Xr);
                     ip.Kc[r] = ip.Kp[r] * pow(R * T_local, -Xr);
                     ip.KB[r] = ip.KF[r] / ip.Kc[r];
-                    if (ip.R_TB[r] = 0.0)
+                    if (ip.R_TB[r] == 0.0)
                         ip.R_TB[r] = 1.0;
                     ip.RR[r] = ip.KF[r] * ip.RR_F[r] - ip.KB[r] * ip.RR_B[r];
                 }
@@ -918,9 +918,9 @@ double Reaction::GetHi(double T, double R, int SP, Array<double, 2> &Coeff0, Arr
     double Hi = 0.0;
 
     if (T < 1000)
-        Hi = R * (-Coeff0(0, SP) * pow(T, -1) + Coeff0(1, SP) * log(T) + Coeff0(2, SP) + Coeff0(3, SP) * pow(T, 2) / 2 + Coeff0(4, SP) * pow(T, 3) / 3 + Coeff0(5, SP) * pow(T, 4) / 4 + Coeff0(6, SP) * pow(T, 5) / 5 + Coeff0(7, SP));
+        Hi = R * (-Coeff0(0, SP) * pow(T, -1) + Coeff0(1, SP) * log(T) + Coeff0(2, SP) * T + Coeff0(3, SP) * pow(T, 2) / 2 + Coeff0(4, SP) * pow(T, 3) / 3 + Coeff0(5, SP) * pow(T, 4) / 4 + Coeff0(6, SP) * pow(T, 5) / 5 + Coeff0(7, SP));
     else
-        Hi = R * (-Coeff1(0, SP) * pow(T, -1) + Coeff1(1, SP) * log(T) + Coeff1(2, SP) + Coeff1(3, SP) * pow(T, 2) / 2 + Coeff1(4, SP) * pow(T, 3) / 3 + Coeff1(5, SP) * pow(T, 4) / 4 + Coeff1(6, SP) * pow(T, 5) / 5 + Coeff0(7, SP));
+        Hi = R * (-Coeff1(0, SP) * pow(T, -1) + Coeff1(1, SP) * log(T) + Coeff1(2, SP) * T + Coeff1(3, SP) * pow(T, 2) / 2 + Coeff1(4, SP) * pow(T, 3) / 3 + Coeff1(5, SP) * pow(T, 4) / 4 + Coeff1(6, SP) * pow(T, 5) / 5 + Coeff0(7, SP));
     
     return Hi;
 }

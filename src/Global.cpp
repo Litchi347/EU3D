@@ -32,9 +32,9 @@ int Global::SenJud(char *sentence)
 {
     int i = 0;
     char c = sentence[i];
-    if(c == '#')
+    if (c == '#')
         return 2;
-    if(c == '\n' || c == '\0' || c == ' ')
+    if (c == '\n' || c == '\0' || c == ' ')
         return 1;
     else
         return 0;
@@ -60,14 +60,14 @@ void Global::ParaGet(char *sentence, char *parameter, char *value)
     while(c != ' ')
     {
         parameter[i] = sentence[i];
-        i ++;
+        i++;
         c = sentence[i];
     }
     parameter[i] = '\0';
     // 跳过空格
     while(c == ' ')
     {
-        i ++;
+        i++;
         c = sentence[i];
     }
     // 提取数值到 value ，并在结尾加上 \0 符号

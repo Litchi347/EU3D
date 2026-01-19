@@ -4,8 +4,8 @@
 
 #pragma once
 
-# include "Array.hpp"
-# include <vector>
+#include "Array.hpp"
+#include <vector>
 using namespace ARRAY;
 #ifndef GLOBAL
 #define GLOBAL
@@ -39,11 +39,11 @@ namespace Global
     int SenJud(char *sentence);
 
     // 得到一个形如 "value 10" 字符行的键值对信息
-    void ParaGet(char *sentence,char *parameter,char *value);
+    void ParaGet(char *sentence, char *parameter, char *value);
 
 
     template <typename T>
-    void swap(T &a,T &b)
+    void swap(T &a, T &b)
     {
         T temp = a;
         a = b;
@@ -58,23 +58,23 @@ namespace Global
 
         for (int j = low; j < high; j ++)
         {
-            if(arr[j] > pivot)
+            if (arr[j] > pivot)
             {
-                i ++;
-                swap(arr[i],arr[j]);
-                swap(index[i],index[j]);
+                i++;
+                swap(arr[i], arr[j]);
+                swap(index[i], index[j]);
             }
         }
 
-        swap(arr[i + 1],arr[high]);
-        swap(index[i+1],index[high]);
-        return i+1;
+        swap(arr[i + 1], arr[high]);
+        swap(index[i+1], index[high]);
+        return i + 1;
     }
 
     template <typename T>
     void quickSort(std::vector<T> &arr, std::vector<T> &index, int low, int high)   // 快排
     {
-        if(low < high)
+        if (low < high)
         {
 
             int pi = partition(arr, index, low, high);
@@ -85,7 +85,7 @@ namespace Global
         }
     }
 
-    template<typename T>
+    template <typename T>
     int findIndex(std::vector<T> &index, int target)                                // 在 index 中寻找值为 target 的项的索引
     {
         for (int i = 0; i < index.GetSize(); i++)
@@ -113,7 +113,7 @@ namespace Global
 
 extern int myid;                                                                    // 当前进程编号
 extern int numprocs;                                                                // 总进程数
-extern int m_block_x,m_block_y,m_block_z;                                           // 分配给当前进程处理的局部网格规模
-extern int m_left,m_right,m_up,m_down,m_front,m_back;                               // X 方向上的左邻居和右邻居的 myid，Y 方向上的上邻居和下邻居的 myid，Z 方向上的前邻居和后邻居的 myid
-extern int myid_x,myid_y,myid_z;                                                    // 当前进程在 X、Y、Z 三个方向上的坐标索引
+extern int m_block_x, m_block_y, m_block_z;                                         // 分配给当前进程处理的局部网格规模
+extern int m_left, m_right, m_up, m_down, m_front, m_back;                          // X 方向上的左邻居和右邻居的 myid，Y 方向上的上邻居和下邻居的 myid，Z 方向上的前邻居和后邻居的 myid
+extern int myid_x, myid_y, myid_z;                                                  // 当前进程在 X、Y、Z 三个方向上的坐标索引
 extern int num_thread;                                                              // OpenMP 线程数

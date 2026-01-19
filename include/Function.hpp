@@ -26,7 +26,7 @@ public:
     Function() = default;
 
 
-    double sum(int flag,Array<double,1> &a, Array<double,1> &b);
+    double sum(int flag, Array<double, 1> &a, Array<double, 1> &b);
 
 
     ~Function(){ ; };

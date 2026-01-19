@@ -1,11 +1,11 @@
 #pragma once
-# include <assert.h>
-# include <array>
-# include <cmath>
-# include <cstddef>
-# include <iostream>
-# include <utility>
-# include <tuple>
+#include <assert.h>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <iostream>
+#include <utility>
+#include <tuple>
 namespace ARRAY                                                                // 将多维索引映射到一维连续内存空间中
 {
     template <class Lam, size_t... Is>                                         // 模版参数，一个名为 Lam 的类型和无符号整型的多个数字，按照数字个数展开代码
@@ -108,7 +108,7 @@ namespace ARRAY                                                                /
         Array(const Array<T_t, Dim_t> &array)                                  // 允许不同数据类型但维度相同的数组进行转化拷贝
         {
 
-            constexpr auto IsConvert = std::is_convertible_v<T_t,T>;
+            constexpr auto IsConvert = std::is_convertible_v<T_t, T>;
             static_assert(IsConvert);                                          // 确保源类型可以安全转换成目标类型
 
             static_assert(Dim == Dim_t);
@@ -263,7 +263,7 @@ namespace ARRAY                                                                /
         {
             constexpr auto TypeOK = std::is_convertible_v<Type, T>;
             static_assert(TypeOK);
-            for(int i = 0;i < Len; i++)
+            for (int i = 0; i < Len; i++)
                 buf[i] = value;
         }
 
@@ -271,7 +271,7 @@ namespace ARRAY                                                                /
         inline const T MaxValue() const
         {
             T maxValue = buf[0];
-            for(size_t i = 1;i < Len;i++)
+            for (size_t i = 1; i < Len; i++)
             {
                 if(buf[i] > maxValue)
                 {
@@ -285,7 +285,7 @@ namespace ARRAY                                                                /
         {
             T maxValue = buf[0];
             size_t maxPosition = 0;
-            for(size_t i = 1;i < Len;i ++)
+            for (size_t i = 1; i < Len; i ++)
             {
                 if(buf[i] > maxValue)
                 {
@@ -300,7 +300,7 @@ namespace ARRAY                                                                /
         inline const T MinValue() const
         {
             T minValue = buf[0];
-            for(size_t i = 1; i < Len;i ++)
+            for (size_t i = 1; i < Len; i++)
             {
                 if(buf[i] < minValue)
                 {
@@ -320,7 +320,7 @@ namespace ARRAY                                                                /
         inline const T Sum() const
         {
             T sum = 0;
-            for(size_t i = 0; i < Len; i++)
+            for (size_t i = 0; i < Len; i++)
             {
                 sum += buf[i];
             }
@@ -330,12 +330,12 @@ namespace ARRAY                                                                /
         inline const T SumNoBoundary(int bc) const                             // 去除边缘层后内部数据部分化学计算步数总和
         {
             T sum = 0;
-            for(size_t i = 0; i < Len; i++)
+            for (size_t i = 0; i < Len; i++)
             {
                 size_t z = i % EachDim[2];                                     // z 坐标
                 size_t y = (i / EachDim[2]) % EachDim[1];                      // y 坐标
                 size_t x = i / (EachDim[2] * EachDim[1]);                      // x 坐标
-                if(x >= bc && y >= bc && z >= bc && 
+                if (x >= bc && y >= bc && z >= bc && 
                     x < EachDim[0] - bc &&
                     y < EachDim[1] - bc &&
                     z < EachDim[2] - bc)
@@ -348,9 +348,9 @@ namespace ARRAY                                                                /
         inline const T SumPositive() const
         {
             T sump = 0;
-            for(size_t i = 0; i < Len;i++)
+            for (size_t i = 0; i < Len; i++)
             {
-                if(buf[i] > 0)
+                if (buf[i] > 0)
                 {
                     sump += buf[i];
                 }
@@ -361,7 +361,7 @@ namespace ARRAY                                                                /
         // 判断有无空值
         inline const bool IsNan() const
         {
-            for(size_t i = 0; i < Len; i++)
+            for (size_t i = 0; i < Len; i++)
             {
                 if(std::isnan(buf[i]))
                 {
@@ -380,7 +380,7 @@ namespace ARRAY                                                                /
 
         inline void Print()
         {
-            for(size_t i = 0;i < Len;i ++)
+            for (size_t i = 0; i < Len; i++)
                 std::cout << buf[i] << '\t';
             std::cout << '\n';
         }
@@ -394,7 +394,7 @@ namespace ARRAY                                                                /
             size_t k = m % EachDim[2];
             size_t j = (m / EachDim[2]) % EachDim[1];
             size_t i = m / (EachDim[2] * EachDim[1]);
-            return std::make_tuple(i,j,k);
+            return std::make_tuple(i, j, k);
         }
     };
 }

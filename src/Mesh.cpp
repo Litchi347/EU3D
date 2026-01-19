@@ -59,7 +59,7 @@ void Mesh::MeshProcess(char *gridname)
     Boundary();
 
 
-
+    // MeshCheck();
 }
 
 
